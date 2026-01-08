@@ -82,6 +82,11 @@ def main():
     )
     parser.add_argument("--noise", type=float, help="Observation noise std", default=0)
     parser.add_argument("--x-sampler", type=str, help="X sampler", default="uniform")
+    parser.add_argument("--mod-p", type=int, default=113)
+    parser.add_argument("--mod-episode-size", type=int, default=2048)
+    parser.add_argument("--mod-m-train-max", type=int, default=20)
+    parser.add_argument("--mod-m-test-min", type=int, default=21)
+    parser.add_argument("--mod-m-test-max", type=int, default=40)
 
     # knowledge and parameter freezing
     parser.add_argument(
@@ -223,6 +228,40 @@ def main():
         help="Dimension of knowledge representaiton",
         default=None,
     )
+    # knowledge regularization (optional)
+    parser.add_argument(
+        "--knowledge-contrastive",
+        type=str2bool,
+        const=True,
+        nargs="?",
+        default=False,
+    )
+    parser.add_argument("--kcon-inv-weight", type=float, default=0.0)
+    parser.add_argument("--kcon-use-weight", type=float, default=0.0)
+    parser.add_argument("--kcon-margin", type=float, default=0.0)
+
+    parser.add_argument(
+        "--knowledge-functional",
+        type=str2bool,
+        const=True,
+        nargs="?",
+        default=False,
+    )
+    parser.add_argument("--kfunc-mismatch-weight", type=float, default=0.0)
+    parser.add_argument("--kfunc-improve-weight", type=float, default=0.0)
+    parser.add_argument("--kfunc-margin", type=float, default=0.0)
+    parser.add_argument(
+        "--knowledge-guidance",
+        type=str2bool,
+        const=True,
+        nargs="?",
+        default=False,
+    )
+    parser.add_argument("--kg-steps", type=int, default=15)
+    parser.add_argument("--kg-lr", type=float, default=0.2)
+    parser.add_argument("--kg-s0", type=float, default=0.2)
+    parser.add_argument("--kg-prior-w", type=float, default=0.01)
+    parser.add_argument("--kg-num-cal", type=int, default=3)
     # saving args
     parser.add_argument(
         "--run-name-prefix", type=str, help="Run name prefix", default="run"

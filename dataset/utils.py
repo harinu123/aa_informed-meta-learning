@@ -8,6 +8,8 @@ from dataset.dataset import (
     SetKnowledgeTrendingSinusoids,
     SetKnowledgeTrendingSinusoidsDistShift,
     Temperatures,
+    Atom3DLBAPocketPOC,
+    ModularAdditionRotations,
 )
 
 
@@ -88,6 +90,8 @@ def get_dataloader(dataset, config):
     if config.dataset in [
         "set-trending-sinusoids",
         "set-trending-sinusoids-dist-shift",
+        "atom3d-lba-pocket-poc",
+        "modular-addition-rotations",
     ]:
         collate_knowledge = True
     else:
@@ -132,6 +136,49 @@ def setup_dataloaders(config):
         )
         val_dataset = Temperatures(split="val", knowledge_type=config.knowledge_type)
         test_dataset = Temperatures(split="test", knowledge_type=config.knowledge_type)
+
+    elif config.dataset == "atom3d-lba-pocket-poc":
+        train_dataset = Atom3DLBAPocketPOC(
+            split="train", root="./data/atom3d-lba-pocket-poc"
+        )
+        val_dataset = Atom3DLBAPocketPOC(
+            split="val", root="./data/atom3d-lba-pocket-poc"
+        )
+        test_dataset = Atom3DLBAPocketPOC(
+            split="test", root="./data/atom3d-lba-pocket-poc"
+        )
+
+    elif config.dataset == "modular-addition-rotations":
+        train_dataset = ModularAdditionRotations(
+            split="train",
+            p=config.mod_p,
+            m_train_max=config.mod_m_train_max,
+            m_test_min=config.mod_m_test_min,
+            m_test_max=config.mod_m_test_max,
+            episode_size=config.mod_episode_size,
+            seed=config.seed,
+            knowledge_type=config.knowledge_type,
+        )
+        val_dataset = ModularAdditionRotations(
+            split="val",
+            p=config.mod_p,
+            m_train_max=config.mod_m_train_max,
+            m_test_min=config.mod_m_test_min,
+            m_test_max=config.mod_m_test_max,
+            episode_size=config.mod_episode_size,
+            seed=config.seed + 123,
+            knowledge_type=config.knowledge_type,
+        )
+        test_dataset = ModularAdditionRotations(
+            split="test",
+            p=config.mod_p,
+            m_train_max=config.mod_m_train_max,
+            m_test_min=config.mod_m_test_min,
+            m_test_max=config.mod_m_test_max,
+            episode_size=config.mod_episode_size,
+            seed=config.seed + 999,
+            knowledge_type=config.knowledge_type,
+        )
 
     else:
         raise ValueError(f"Unknown dataset {config.dataset}")

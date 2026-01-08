@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import torch
@@ -183,5 +184,117 @@ class Temperatures(Dataset):
 
         x = torch.tensor(x, dtype=torch.float32).unsqueeze(-1)
         y = torch.tensor(y, dtype=torch.float32).unsqueeze(-1)
+
+        return x, y, knowledge
+
+
+class Atom3DLBAPocketPOC(Dataset):
+    def __init__(self, split="train", root="./data/atom3d-lba-pocket-poc", episode_size=None):
+        path = os.path.join(root, "tasks.pt")
+        blob = torch.load(path)
+        meta = blob["meta"]
+        self.tasks = blob[split]
+        self.split = split
+        self.dim_x = meta["x_dim"]
+        self.dim_y = 1
+        self.knowledge_input_dim = meta["k_dim"]
+        self.episode_size = episode_size or meta["episode_size"]
+        self._filter_tasks()
+
+    def _filter_tasks(self):
+        self.tasks = [
+            task
+            for task in self.tasks
+            if task["X"].shape[0] >= self.episode_size
+        ]
+
+    def __len__(self):
+        return len(self.tasks)
+
+    def __getitem__(self, idx):
+        task = self.tasks[idx]
+        X = task["X"]
+        Y = task["Y"]
+        k = task["k"]
+
+        if X.shape[0] >= self.episode_size:
+            indices = np.random.choice(X.shape[0], self.episode_size, replace=False)
+        else:
+            indices = np.random.choice(X.shape[0], self.episode_size, replace=True)
+
+        x = torch.tensor(X[indices], dtype=torch.float32)
+        y = torch.tensor(Y[indices], dtype=torch.float32)
+        knowledge = torch.tensor(k, dtype=torch.float32)
+
+        return x, y, knowledge
+
+
+class ModularAdditionRotations(Dataset):
+    def __init__(
+        self,
+        split="train",
+        p=113,
+        m_train_max=20,
+        m_test_min=21,
+        m_test_max=40,
+        episode_size=2048,
+        seed=0,
+        knowledge_type="w",
+    ):
+        self.split = split
+        self.p = p
+        self.m_train_max = m_train_max
+        self.m_test_min = m_test_min
+        self.m_test_max = m_test_max
+        self.episode_size = episode_size
+        self.seed = seed
+        self.knowledge_type = knowledge_type
+        self.dim_x = 2
+        self.dim_y = 2
+        self.knowledge_input_dim = 1
+
+        if split == "train":
+            self.length = 5000
+            self.split_offset = 0
+        elif split in ("val", "valid"):
+            self.length = 1000
+            self.split_offset = 10_000
+        elif split == "test":
+            self.length = 1000
+            self.split_offset = 20_000
+        else:
+            raise ValueError(f"Unknown split {split}")
+
+    def __len__(self):
+        return self.length
+
+    def __getitem__(self, idx):
+        rng = np.random.default_rng(self.seed + idx + self.split_offset)
+
+        if self.split == "test":
+            m = rng.integers(self.m_test_min, self.m_test_max + 1)
+        else:
+            m = rng.integers(1, self.m_train_max + 1)
+
+        a = rng.integers(0, self.p, size=self.episode_size)
+        b = rng.integers(0, self.p, size=self.episode_size)
+        c = (a + b) % self.p
+
+        a_norm = 2 * a / (self.p - 1) - 1
+        b_norm = 2 * b / (self.p - 1) - 1
+        x = np.stack([a_norm, b_norm], axis=-1).astype(np.float32)
+
+        w = 2 * np.pi * m / self.p
+        y = np.stack([np.sin(w * c), np.cos(w * c)], axis=-1).astype(np.float32)
+
+        if self.knowledge_type == "w":
+            knowledge = torch.tensor([[w]], dtype=torch.float32)
+        elif self.knowledge_type == "none":
+            knowledge = torch.zeros((1, 1), dtype=torch.float32)
+        else:
+            raise NotImplementedError
+
+        x = torch.tensor(x, dtype=torch.float32)
+        y = torch.tensor(y, dtype=torch.float32)
 
         return x, y, knowledge
