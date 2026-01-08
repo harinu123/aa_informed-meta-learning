@@ -22,6 +22,9 @@ dependencies:
       - pandas
       - seaborn
       - scikit-learn~=1.5.2
+      - atom3d
+      - lmdb
+      - biopython
       - pymc~=5.18.1
       - toml~=0.10.2
       - optuna~=4.1.0
