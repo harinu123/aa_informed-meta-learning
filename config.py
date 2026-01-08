@@ -82,6 +82,11 @@ def main():
     )
     parser.add_argument("--noise", type=float, help="Observation noise std", default=0)
     parser.add_argument("--x-sampler", type=str, help="X sampler", default="uniform")
+    parser.add_argument("--mod-p", type=int, default=113)
+    parser.add_argument("--mod-episode-size", type=int, default=2048)
+    parser.add_argument("--mod-m-train-max", type=int, default=20)
+    parser.add_argument("--mod-m-test-min", type=int, default=21)
+    parser.add_argument("--mod-m-test-max", type=int, default=40)
 
     # knowledge and parameter freezing
     parser.add_argument(

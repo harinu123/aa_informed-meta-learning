@@ -193,15 +193,6 @@ def get_summary_df(
                                     steer_s = torch.zeros(
                                         x_context.shape[0], device="cpu"
                                     )
-                                    steer_s = torch.zeros(
-                                        x_context.shape[0], device="cpu"
-                                    )
-                                    steer_s = None
-                                elif eval_type == "guided":
-                                    n_ctx = x_context.shape[1]
-                                    k_cal = min(
-                                        getattr(config, "kg_num_cal", 3), max(0, n_ctx)
-                                    )
                                     if k_cal == 0:
                                         outputs = model(
                                             x_context,

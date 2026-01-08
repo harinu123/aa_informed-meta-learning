@@ -139,7 +139,12 @@ def _load_atom3d_lba(data_dir=None):
             "ATOM3D is not installed. Install with `pip install atom3d`."
         ) from exc
 
-    return load_dataset("lba", data_dir=data_dir)
+    if data_dir is None:
+        return load_dataset("lba")
+    try:
+        return load_dataset("lba", data_dir=data_dir)
+    except TypeError:
+        return load_dataset("lba", data_dir)
 
 
 def _iter_records(dataset):
