@@ -193,6 +193,9 @@ def get_summary_df(
                                     steer_s = torch.zeros(
                                         x_context.shape[0], device="cpu"
                                     )
+                                    steer_s = torch.zeros(
+                                        x_context.shape[0], device="cpu"
+                                    )
                                     steer_s = None
                                 elif eval_type == "guided":
                                     n_ctx = x_context.shape[1]

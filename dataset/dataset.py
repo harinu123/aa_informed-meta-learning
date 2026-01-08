@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import torch
@@ -183,5 +184,46 @@ class Temperatures(Dataset):
 
         x = torch.tensor(x, dtype=torch.float32).unsqueeze(-1)
         y = torch.tensor(y, dtype=torch.float32).unsqueeze(-1)
+
+        return x, y, knowledge
+
+
+class Atom3DLBAPocketPOC(Dataset):
+    def __init__(self, split="train", root="./data/atom3d-lba-pocket-poc", episode_size=None):
+        path = os.path.join(root, "tasks.pt")
+        blob = torch.load(path)
+        meta = blob["meta"]
+        self.tasks = blob[split]
+        self.split = split
+        self.dim_x = meta["x_dim"]
+        self.dim_y = 1
+        self.knowledge_input_dim = meta["k_dim"]
+        self.episode_size = episode_size or meta["episode_size"]
+        self._filter_tasks()
+
+    def _filter_tasks(self):
+        self.tasks = [
+            task
+            for task in self.tasks
+            if task["X"].shape[0] >= self.episode_size
+        ]
+
+    def __len__(self):
+        return len(self.tasks)
+
+    def __getitem__(self, idx):
+        task = self.tasks[idx]
+        X = task["X"]
+        Y = task["Y"]
+        k = task["k"]
+
+        if X.shape[0] >= self.episode_size:
+            indices = np.random.choice(X.shape[0], self.episode_size, replace=False)
+        else:
+            indices = np.random.choice(X.shape[0], self.episode_size, replace=True)
+
+        x = torch.tensor(X[indices], dtype=torch.float32)
+        y = torch.tensor(Y[indices], dtype=torch.float32)
+        knowledge = torch.tensor(k, dtype=torch.float32)
 
         return x, y, knowledge
